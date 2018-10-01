@@ -3,6 +3,7 @@
 sys.path.append("../lib")       # for params
 import sys, re, socket, params
 
+
 switchesVarDefaults = (
     (('-l', '--listenPort') ,'listenPort', 50001),
     (('-d', '--debug'), "debug", False), # boolean (set if present)
