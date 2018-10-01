@@ -8,7 +8,6 @@ import re, socket, params,os
 
 from framedSock import framedSend, framedReceive
 
-
 switchesVarDefaults = (
     (('-s', '--server'), 'server', "127.0.0.1:50001"),
     (('-d', '--debug'), "debug", False), # boolean (set if present)
@@ -22,10 +21,14 @@ dirPath = os.path.dirname(os.path.realpath(__file__))
 server, usage, debug  = paramMap["server"], paramMap["usage"], paramMap["debug"]
 tryConnect = True 
 while(tryConnect): 
-    serverParse = str(input("Please input server socket you wish to connect to:"))
+    
+    serverParse1 = raw_input("Please input server ip address you wish to connect to: ")
+
+           
+    serverParse = str(input("Please input server socket you wish to connect to: "))
 
     if(serverParse.strip() != ""): 
-        server = "127.0.0.1:" + str(serverParse).strip()
+        server = serverParse1.strip() + ":" + str(serverParse).strip()
 
     if usage:
         params.usage()
@@ -158,12 +161,8 @@ while(cont):
 
     except: 
         print("No number input, please try again. ")    
-        
-   
-framedSend(s, b"hello world", debug)
-print("received:", framedReceive(s, debug))
-
-print("sending hello world")
-framedSend(s, b"hello world", debug)
-print("received:", framedReceive(s, debug))
+ 
+SendDet = "-cmd Exiting"
+framedSend(s, SendDet.encode('utf-8') , debug) 
+print("Exited")        
 
