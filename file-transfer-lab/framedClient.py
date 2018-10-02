@@ -19,12 +19,13 @@ progname = "framedClient"
 paramMap = params.parseParams(switchesVarDefaults)
 dirPath = os.path.dirname(os.path.realpath(__file__))
 server, usage, debug  = paramMap["server"], paramMap["usage"], paramMap["debug"]
+
 tryConnect = True 
 while(tryConnect): 
     
     serverParse1 = raw_input("Please input server ip address you wish to connect to: ")
 
-           
+        
     serverParse = str(input("Please input server socket you wish to connect to: "))
 
     if(serverParse.strip() != ""): 
@@ -66,9 +67,15 @@ while(tryConnect):
     if s is None:
         print('could not open socket')
         print("")
+            
 totSizeLineRem = 0
 cont = True 
 while(cont):
+    #try: 
+    #    framedSend(s, "CheckAlive".encode('utf-8') , debug)
+    #except: 
+        #then it is dead thus reprompt to connect.
+    #    setUpSocket()
     print(" ")
     print("Please enter:")
     print("             0 to send a file to a server")
@@ -89,7 +96,7 @@ while(cont):
                     except: 
                         try: 
                             realFile = os.path.isFile(dirPath + "\\" + fileNameProvided)
-                            print("realFIle: ")
+                            #print("realFile: ")
                         except: 
                             print("Error finding file. Please try again")
                     if(realFile): 
@@ -117,11 +124,10 @@ while(cont):
                                         for line in f:#loop through all lines if they are small enough send else split in two and tack detail to end. 
                                             if(sys.getsizeof(line) <= 100): 
                                             #send
-                                                print("Sending line.")
-                                                framedSend(s, line.encode('utf-8'), debug)
+                                                print("Sending line. " + line)
+                                                framedSend(s, line.strip().encode('utf-8'), debug)
                                                 print("received:", framedReceive(s, debug)) 
                                             else:
-                                                print("gets here")
                                                 totSizeLine = sys.getsizeof(line)
                                                 print("Total line size: "+ str(totSizeLine))
                                                 notDone = True
