@@ -56,13 +56,11 @@ while True:
             if(notStarted): 
                 for cmd in cmds: 
                     if(openFile): 
-                        if cmd.strip() in fileDict:
-                            notStarted = True 
-                            openFile = False
-                            payload += b"FileAlreadyIn"             
-                            framedSend(sock, payload, debug)
+                        if cmd.strip() in fileDict: 
+                            openFile = True
+                            print("Overwrote file included due to request.")
                         else:    
-                            fileGiven = open(cmd+"ServerVersion", 'w') #open file in server Area appending ServerVers
+                            fileGiven = open(cmd+"ServerVersion", 'wb+') #open file in server Area appending ServerVers
                             notStarted = False
                             fileDict[cmd] = True 
                     if(cmd == "-StrFl"):
