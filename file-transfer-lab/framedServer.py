@@ -62,7 +62,7 @@ while True:
                             payload += b"FileAlreadyIn"             
                             framedSend(sock, payload, debug)
                         else:    
-                            fileGiven = open(cmd+"ServerVers", 'w') #open file in server Area appending ServerVers
+                            fileGiven = open(cmd+"ServerVersion", 'w') #open file in server Area appending ServerVers
                             notStarted = False
                             fileDict[cmd] = True 
                     if(cmd == "-StrFl"):
@@ -116,7 +116,7 @@ while True:
                         
 
                     else: 
-                        fileGiven.write(payload + '\n') #modify this to take the parts of a same line.
+                        fileGiven.write(payload + '\n') 
                         
             if debug: print("rec'd: ", payload)
             
