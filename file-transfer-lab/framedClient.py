@@ -113,6 +113,8 @@ while(cont):
                             framedSend(s, SendDet.encode('utf-8') , debug)
                             print("received:", framedReceive(s, debug))
                             
+                            
+                            
                             if(proceedToSend): 
                                 
                                 # we only want 100 bytes so lets loop through
