@@ -4,6 +4,22 @@ sys.path.append("../lib")       # for params
 import re, socket, params,os
 
 
+#start by creating a file for writing all transfered files. This will just reset for every different server. Essentially you lose them
+#once you start a new server. 
+
+curDir =os.path.dirname(os.path.abspath(__file__))
+strPath = curDir + r'/serverStorage'
+strNum = 0
+notUnique = True
+while(notUnique):
+    if not os.path.exists(strPath):
+        os.makedirs(strPath) 
+        notUnique = False 
+    else: 
+        strPath = strPath + str(strNum)
+        strNum = strNum + 1 
+#should have storage folder now. 
+
 switchesVarDefaults = (
     (('-l', '--listenPort') ,'listenPort', 50001),
     (('-d', '--debug'), "debug", False), # boolean (set if present)
@@ -20,8 +36,8 @@ if paramMap['usage']:
     params.usage()
 dontProceed = True 
 while(dontProceed): 
-    listenPort = input("Please input the port you want the server to listen on: ")
-    try: 
+    try:
+        listenPort = input("Please input the port you want the server to listen on: ")
         lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) # listener socket
         bindAddr = ('127.0.0.1', listenPort)
         lsock.bind(bindAddr)
@@ -29,9 +45,10 @@ while(dontProceed):
         dontProceed = False 
     except: 
         dontProceed = True 
+        print("Invalid.")
         
 print("listening on:", bindAddr)
-
+print("Writing all transfered files to:" + strPath)
 while True:
     sock, addr = lsock.accept()
     try: 
@@ -62,7 +79,7 @@ while True:
                                 openFile = True
                                 print("Overwrote file included due to request.")
                             else:    
-                                fileGiven = open("serverStorage/"+cmd,'wb+') #open file in server Area appending ServerVers
+                                fileGiven = open(strPath +"/"+cmd,'wb+') #open file in server area to write to. 
                                 notStarted = False
                                 fileDict[cmd] = True 
                         if(cmd == "-StrFl"):
@@ -76,6 +93,7 @@ while True:
                                 fileGiven.close()
                                 cmdEntered = False 
                                 notStarted = True
+                                openFile = False
                         if(cmd == "-cmd"): 
                             #then next will be to close 
                             cmdEntered = True
