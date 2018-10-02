@@ -12,6 +12,7 @@ switchesVarDefaults = (
 
 progname = "echoserver"
 paramMap = params.parseParams(switchesVarDefaults)
+fileDict = {}
 
 debug, listenPort = paramMap['debug'], paramMap['listenPort']
 
@@ -43,7 +44,11 @@ while True:
         openFile = False 
         fileGiven = ""
         cmdEntered = False
-        
+        append = False 
+        totAppend = ""
+        display = False
+        curAppend = ""
+        addRest = False
         while True:
             payload = framedReceive(sock, debug)
             print("read: " + payload)
@@ -51,8 +56,15 @@ while True:
             if(notStarted): 
                 for cmd in cmds: 
                     if(openFile): 
-                        fileGiven = open(cmd+"ServerVers", 'w') #open file in server Area appending ServerVers
-                        notStarted = False 
+                        if cmd.strip() in fileDict:
+                            notStarted = True 
+                            openFile = False
+                            payload += b"FileAlreadyIn"             
+                            framedSend(sock, payload, debug)
+                        else:    
+                            fileGiven = open(cmd+"ServerVers", 'w') #open file in server Area appending ServerVers
+                            notStarted = False
+                            fileDict[cmd] = True 
                     if(cmd == "-StrFl"):
                         #then we have a file to open. 
                         openFile = True 
@@ -72,12 +84,46 @@ while True:
                 
                 #then we write a line if we get here. 
                 if(notStarted == False): 
-                    fileGiven.write(payload + '\n') #modify this to take the parts of a same line.  
+                    addRest = False
+                    append = False 
+                     
+                    cnt = 0 
+                    for cmd in cmds: 
+                        if(cmd.strip() == "NEWLINE"):
+                            curAppend= curAppend +'\n'
+                            display = True
+                            break
+                        if(cmd.strip() == "DONELINE"): 
+                            display = True
+                            break
+                        if(addRest): 
+                            if((cmd != "PL" and cmd != "DONELINE")):
+                                curAppend = curAppend + cmd 
+                        if((cmd.strip() == "PL") and (cnt == 0)):
+                            append = True
+                            addRest = True
+                        
+                    if(append): 
+                        if(display): 
+                            fileGiven.write(totAppend + curAppend + '\n')
+                            append = False 
+                            totAppend = ""
+                            display = False
+                            addRest = False
+                            cnt = 0 
+                        else:     
+                            totAppend = totAppend + curAppend
+                        
+
+                    else: 
+                        fileGiven.write(payload + '\n') #modify this to take the parts of a same line.
+                        
             if debug: print("rec'd: ", payload)
             
             if not payload:
                 break
             payload += b"!"             # make emphatic!
             framedSend(sock, payload, debug)
-    except:
+    except Exception as e: 
+        print(e)
         print("Disconnected Client")
