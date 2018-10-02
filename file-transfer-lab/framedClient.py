@@ -14,7 +14,7 @@ switchesVarDefaults = (
     (('-?', '--usage'), "usage", False), # boolean (set if present)
     )
 
-
+tosSizeLineRem = 0
 progname = "framedClient"
 paramMap = params.parseParams(switchesVarDefaults)
 dirPath = os.path.dirname(os.path.realpath(__file__))
@@ -66,7 +66,7 @@ while(tryConnect):
     if s is None:
         print('could not open socket')
         print("")
-
+totSizeLineRem = 0
 cont = True 
 while(cont):
     print(" ")
@@ -93,6 +93,7 @@ while(cont):
                         except: 
                             print("Error finding file. Please try again")
                     if(realFile): 
+                        proceedToSend = True 
                         #then we need to check size and see if it is empty. 
                         if(os.stat(fileNameProvided).st_size == 0): 
                             print("You can only transfer files that contain something. Please try again.")
@@ -105,49 +106,60 @@ while(cont):
                             framedSend(s, SendDet.encode('utf-8') , debug)
                             print("received:", framedReceive(s, debug))
                             
-                            
-                            # we only want 100 bytes so lets loop through
-                            f = open(fileNameProvided, "rb")
-                            cnt = 0
-                        
-                            try:
-                                lines = [line.rstrip('\n') for line in f] 
+                            if(proceedToSend): 
                                 
-                                for line in lines: 
-                                   #loop through all lines if they are small enough send else split in two and tack detail to end. 
-                                   if(sys.getsizeof(line) <= 100): 
-                                       #send
-                   
-                                       framedSend(s, line.encode('utf-8'), debug)
-                                       print("received:", framedReceive(s, debug)) 
-                                   else: 
-                                        totSizeLine = sys.getsizeof(line)
-                                        notDone = True
-                                        min = 0 
-                                        max = 100
-                                        while(notDone): 
-                                            tosSizeLineRem = totSizeLine - (100*cnt)
-                                            if(totSizeLineRem > 100): 
-                                                lineSending = line[min:max] + "PL"
-                                                framedSend(s, lineSending.encode('utf-8') , debug)
-                                                print("received:", framedReceive(s, debug))
-                                            else: 
-                                                lineSending = line[min:totSizeLineRem] + "PL"
-                                                framedSend(s, lineSending.encode('utf-8') , debug)
-                                                print("received:", framedReceive(s, debug))
-                                                notDone = False 
-                                            min = max 
-                                            max = max + 100 
-                                                
+                                # we only want 100 bytes so lets loop through
+                                #f = open(fileNameProvided, "rb")
+                                cnt = 0
+                            
+                                try:
+                                    with open(fileNameProvided) as f:
+                                        for line in f:#loop through all lines if they are small enough send else split in two and tack detail to end. 
+                                            if(sys.getsizeof(line) <= 100): 
+                                            #send
+                                                print("Sending line.")
+                                                framedSend(s, line.encode('utf-8'), debug)
+                                                print("received:", framedReceive(s, debug)) 
+                                            else:
+                                                print("gets here")
+                                                totSizeLine = sys.getsizeof(line)
+                                                print("Total line size: "+ str(totSizeLine))
+                                                notDone = True
+                                                cnt = 0
+                                                while(notDone):
+                                                    totSizeLineRem = totSizeLine - (98*cnt)
+                                                    if(totSizeLineRem > 98): 
+                                                        cnt = cnt + 1 
+                                                        valLoop = totSizeLineRem / 98 
+                                                        looping = True
+                                                        totLoop = 0 
+                                                        while(looping): 
+                                                            if(valLoop <= totLoop):
+                                                                looping = False
+                                                                
+                                                                framedSend(s, "NEWLINE".encode('utf-8') , debug)
+                                                                print("received:", framedReceive(s, debug))
+                                                                
+                                                                framedSend(s, "DONELINE".encode('utf-8') , debug)
+                                                                print("received:", framedReceive(s, debug))
+                                                                notDone = False 
+                                                            else:    
+                                                                lineSending = "PL "+ line[(0+(98*totLoop)):(98 + (98*totLoop))]
+                                                                print("LineSending: "+ lineSending)
+                                                                framedSend(s, lineSending.encode('utf-8') , debug)
+                                                                print("received:", framedReceive(s, debug))
+                                                                totLoop = totLoop + 1 
 
-                            except:
-                                print("Error during byte writing.")
-                        
-                            f.close()
-                            #tell server we are done writing 
-                            SendDet = "-cmd CloseFileWritingChunks"
-                            framedSend(s, SendDet.encode('utf-8') , debug)
-                            print("received:", framedReceive(s, debug))
+
+                                except Exception as e:
+                                    print(e)
+                                    print("Error during byte writing.")
+                            
+                                f.close()
+                                #tell server we are done writing 
+                                SendDet = "-cmd CloseFileWritingChunks"
+                                framedSend(s, SendDet.encode('utf-8') , debug)
+                                print("received:", framedReceive(s, debug))
                     else: 
                         print("Invalid file, please try again.")
                 if(cmd == "1"): 
