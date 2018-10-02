@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 import sys
 sys.path.append("../lib")       # for params
-import re, socket, params
+import re, socket, params,os
 
 
 switchesVarDefaults = (
@@ -33,95 +33,97 @@ while(dontProceed):
 print("listening on:", bindAddr)
 
 while True:
+    sock, addr = lsock.accept()
     try: 
-            
-        sock, addr = lsock.accept()
-        print("connection rec'd from", addr)
+        if not os.fork():
+            print("new child process handling connection from", addr)    
+        
+            print("connection rec'd from", addr)
 
 
-        from framedSock import framedSend, framedReceive
-        notStarted = True 
-        openFile = False 
-        fileGiven = ""
-        cmdEntered = False
-        append = False 
-        totAppend = ""
-        display = False
-        curAppend = ""
-        addRest = False
-        while True:
-            payload = framedReceive(sock, debug)
-            print("read: " + payload)
-            cmds = payload.split()
-            if(notStarted): 
-                for cmd in cmds: 
-                    if(openFile): 
-                        if cmd.strip() in fileDict: 
-                            openFile = True
-                            print("Overwrote file included due to request.")
-                        else:    
-                            fileGiven = open(cmd+"ServerVersion", 'wb+') #open file in server Area appending ServerVers
-                            notStarted = False
-                            fileDict[cmd] = True 
-                    if(cmd == "-StrFl"):
-                        #then we have a file to open. 
-                        openFile = True 
-            
-            else: 
-                for cmd in cmds:
-                    if(cmdEntered): 
-                        if(cmd == "CloseFileWritingChunks"):
-                            fileGiven.close()
-                            cmdEntered = False 
-                            notStarted = True
-                    if(cmd == "-cmd"): 
-                        #then next will be to close 
-                        cmdEntered = True
-                    else:
-                        break 
-                
-                #then we write a line if we get here. 
-                if(notStarted == False): 
-                    addRest = False
-                    append = False 
-                     
-                    cnt = 0 
+            from framedSock import framedSend, framedReceive
+            notStarted = True 
+            openFile = False 
+            fileGiven = ""
+            cmdEntered = False
+            append = False 
+            totAppend = ""
+            display = False
+            curAppend = ""
+            addRest = False
+            while True:
+                payload = framedReceive(sock, debug)
+                print("read: " + payload)
+                cmds = payload.split()
+                if(notStarted): 
                     for cmd in cmds: 
-                        if(cmd.strip() == "NEWLINE"):
-                            curAppend= curAppend +'\n'
-                            display = True
-                            break
-                        if(cmd.strip() == "DONELINE"): 
-                            display = True
-                            break
-                        if(addRest): 
-                            if((cmd != "PL" and cmd != "DONELINE")):
-                                curAppend = curAppend + cmd 
-                        if((cmd.strip() == "PL") and (cnt == 0)):
-                            append = True
-                            addRest = True
+                        if(openFile): 
+                            if cmd.strip() in fileDict: 
+                                openFile = True
+                                print("Overwrote file included due to request.")
+                            else:    
+                                fileGiven = open("serverStorage/"+cmd,'wb+') #open file in server Area appending ServerVers
+                                notStarted = False
+                                fileDict[cmd] = True 
+                        if(cmd == "-StrFl"):
+                            #then we have a file to open. 
+                            openFile = True 
+                
+                else: 
+                    for cmd in cmds:
+                        if(cmdEntered): 
+                            if(cmd == "CloseFileWritingChunks"):
+                                fileGiven.close()
+                                cmdEntered = False 
+                                notStarted = True
+                        if(cmd == "-cmd"): 
+                            #then next will be to close 
+                            cmdEntered = True
+                        else:
+                            break 
+                    
+                    #then we write a line if we get here. 
+                    if(notStarted == False): 
+                        addRest = False
+                        append = False 
                         
-                    if(append): 
-                        if(display): 
-                            fileGiven.write(totAppend + curAppend + '\n')
-                            append = False 
-                            totAppend = ""
-                            display = False
-                            addRest = False
-                            cnt = 0 
-                        else:     
-                            totAppend = totAppend + curAppend
-                        
+                        cnt = 0 
+                        for cmd in cmds: 
+                            if(cmd.strip() == "NEWLINE"):
+                                curAppend= curAppend +'\n'
+                                display = True
+                                break
+                            if(cmd.strip() == "DONELINE"): 
+                                display = True
+                                break
+                            if(addRest): 
+                                if((cmd != "PL" and cmd != "DONELINE")):
+                                    curAppend = curAppend + cmd 
+                            if((cmd.strip() == "PL") and (cnt == 0)):
+                                append = True
+                                addRest = True
+                            
+                        if(append): 
+                            if(display): 
+                                fileGiven.write(totAppend + curAppend + '\n')
+                                append = False 
+                                totAppend = ""
+                                display = False
+                                addRest = False
+                                cnt = 0 
+                            else:     
+                                totAppend = totAppend + curAppend
+                            
 
-                    else: 
-                        fileGiven.write(payload + '\n') 
-                        
-            if debug: print("rec'd: ", payload)
-            
-            if not payload:
-                break
-            payload += b"!"             # make emphatic!
-            framedSend(sock, payload, debug)
+                        else: 
+                            fileGiven.write(payload + '\n') 
+                            
+                if debug: print("rec'd: ", payload)
+                
+                if not payload:
+                    break
+                payload += b"!"             # make emphatic!
+                framedSend(sock, payload, debug)
     except Exception as e: 
         print(e)
         print("Disconnected Client")
