@@ -50,6 +50,8 @@ while(dontProceed):
 print("listening on:", bindAddr)
 print("Writing all transfered files to:" + strPath)
 
+#Initial set up of all booleans to handle below. 
+
 notStarted = True 
 openFile = False 
 fileGiven = ""
@@ -144,6 +146,15 @@ while True:
                     break
                 payload += b"!"             # make emphatic!
                 framedSend(sock, payload, debug)
-    except Exception as e: 
-        print(e)
+    except: 
         print("Disconnected Client")
+        #Reset vars if we lose our client. 
+        notStarted = True 
+        openFile = False 
+        fileGiven = ""
+        cmdEntered = False
+        append = False 
+        totAppend = ""
+        display = False
+        curAppend = ""
+        addRest = False
