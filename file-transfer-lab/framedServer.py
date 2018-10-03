@@ -63,6 +63,10 @@ curAppend = ""
 addRest = False
         
 while True:
+    
+    from os import listdir #these three lines implement a method get all file names in a folder efficiently. I took this from: https://stackoverflow.com/questions/3207219/how-do-i-list-all-files-of-a-directory#3207973
+    from os.path import isfile, join
+
     sock, addr = lsock.accept()
     try: 
         if not os.fork():
@@ -74,6 +78,8 @@ while True:
             from framedSock import framedSend, framedReceive
             
             while True:
+                fileDict = [f for f in listdir(strPath) if isfile(join(strPath, f))] #line three referenced above. 
+    
                 payload = framedReceive(sock, debug)
                 print("read: " + payload)
                 cmds = payload.split()
@@ -84,7 +90,7 @@ while True:
                                 print("Overwrote file included due to request.") 
                             fileGiven = open(strPath +"/"+cmd,'wb+') #open file in server area to write to. 
                             notStarted = False #reset vars for next time and turn off notStarted to force next logic
-                            fileDict[cmd] = True 
+                            fileDict.append(cmd.strip())
                             openFile = False 
                             
                         if(cmd == "-StrFl"):
